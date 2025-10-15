@@ -19,6 +19,11 @@ const cloudinaryRoute = require("./routes/bikeUploadRoute.js");
 //export route
 const exportRoutes = require('./routes/exportRoute');
 
+const fetch = require('node-fetch'); // ✅ For node-fetch v2
+
+const SELF_URL = "https://manikagroups.onrender.com";
+
+
 
 dotenv.config();
 const app = express();
@@ -40,7 +45,22 @@ app.use('/api', cloudinaryRoute);
 // DB Connection
 mongoose.connect(process.env.MONGO_URI).then(() => {
   console.log('MongoDB connected');
-  app.listen(process.env.PORT, () => {
-    console.log(`Server running on port ${process.env.PORT}`);
-  });
 }).catch(err => console.error(err));
+
+app.get("/", (req, res) => {
+  res.send("API is running...");
+});
+
+// Ping every 14 minutes to keep Render awake
+setInterval(async () => {
+  try {
+    const res = await fetch(SELF_URL);
+    console.log(`Self-ping status: ${res.status} at ${new Date().toISOString()}`);
+  } catch (err) {
+    console.error("Self-ping failed:", err.message);
+  }
+}, 14 * 60 * 1000);
+
+app.listen(process.env.PORT, () => {
+  console.log(`Server running on port ${process.env.PORT}`);
+});
